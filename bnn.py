@@ -87,16 +87,16 @@ class BNN(models.Sequential):
         print('Input dim : ', input_dim)
 
         self.add(InputLayer(input_shape=(input_dim,)))
-        self.add(QuantDense(num_neuron_in_hidden_dense_layer, input_shape=(input_dim,),kernel_quantizer="ste_sign",
+        self.add(QuantDense(num_neuron_in_hidden_dense_layer, input_shape=(input_dim,),kernel_quantizer="ste_sign",name='QuantDense_1',
                                 kernel_constraint="weight_clip"))
         #self.add(BatchNormalization(momentum=0.999, scale=False))
         #self.add(QuantDense(num_neuron_in_hidden_dense_layer,   **kwargs))
         #self.add(BatchNormalization(momentum=0.999, scale=False))
         #self.add(QuantDense(num_neuron_in_hidden_dense_layer, **kwargs))
-        self.add(BatchNormalization(momentum=0.999, scale=False))          
-        self.add(QuantDense(num_neuron_in_hidden_dense_layer,  **kwargs))
-        self.add(BatchNormalization(momentum=0.999, scale=False))
+        #self.add(BatchNormalization(momentum=0.999, scale=False))          
+        self.add(QuantDense(num_neuron_in_hidden_dense_layer, name='QuantDense_2',  **kwargs))
+        #self.add(BatchNormalization(momentum=0.999, scale=False))
         #self.add(QuantDense(num_neuron_in_hidden_dense_layer,  **kwargs))
         #self.add(BatchNormalization(momentum=0.999, scale=False))
-        self.add(QuantDense(num_neuron_output_layer,activation='softmax' ,**kwargs))
+        self.add(QuantDense(num_neuron_output_layer,activation='softmax' ,**kwargs, name='softmax_layer'))
        

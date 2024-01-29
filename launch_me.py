@@ -98,7 +98,7 @@ if __name__ == "__main__":
      early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
      #Y_train_encoded = np.argmax(Y_train, axis=1)
      #Y_test_encoded = np.argmax(Y_test_encoded, axis=1)
-     layer_sizes = [18, 18, 16]
+     
 
      history = model.fit(X_train, Y_train, epochs=30, batch_size=32, validation_data=(X_test, Y_test), callbacks=[early_stopping])
 
@@ -127,25 +127,41 @@ if __name__ == "__main__":
      print('X_train')
      print(X_train[:10])
      cnf_clauses = Cnf([])
+     layer_sizes = [18, 18, 16]
      input_size = layer_sizes[0]
      hidden_size = layer_sizes[1]
      output_size = layer_sizes[2]
      dim = [
-        [input_size, hidden_size],
-        [hidden_size, output_size]
+    (hidden_size,),  # First QuantDense layer
+    (hidden_size,),  # Second QuantDense layer
+    (output_size,)  # Output layer with softmax activation
     ]
+
+     print('################################################### Encoding Process starts... ###########################################################################')
+
+     
      input_terms = [Term(annotation='in' + str(i)) for i in range(dim[0][0])]
      output_terms = input_terms
 
      for layer, layer_id in zip(model.layers, range(len(model.layers))):
-        if layer_id < len(model.layers) - 1 and isinstance(layer, QuantDense) :
+        if layer_id < len(model.layers) - 1  and isinstance(layer, QuantDense) :
             #x = layer.get_input()
-            weights = layer.get_weights()[0]  # Assuming the weights are the first element in the list returned by get_weights
-            biases = layer.get_weights()[1]
+            weights_in = layer.get_weights()[0]  # Assuming the weights are the first element in the list returned by get_weights
+            biases_in = layer.get_weights()[1]
             #print('layer.get_weights()[0]:', weights[0])
             #print('layer.get_weights()[1]:', biases[:5])
+            print('Internal :', layer.name)
 
-            output_terms, output_clauses = internal_layer_to_cnf(output_terms, weights, biases, 'dense_layer_' + str(layer_id))
+
+            output_terms, output_clauses = internal_layer_to_cnf(output_terms, weights_in, biases_in, 'dense_layer_' + str(layer_id))
+        else:
+            input_terms = [Term(annotation='out' + str(i)) for i in range(dim[-1][0])]
+            output_terms = input_terms
+            weights_out = layer.get_weights()[0]  # Assuming the weights are the first element in the list returned by get_weights
+            biases_out = layer.get_weights()[1]
+            print('External :', layer.name)
+            output_terms, output_clauses = output_layer_to_cnf(output_terms, weights_out, biases_out, 'dense_layer_' + str(layer_id))
+
         cnf_clauses += output_clauses
         print(len(output_clauses.clauses))
 
@@ -180,6 +196,8 @@ if __name__ == "__main__":
      print("swapped %d with %d" % (swap0, swap1))
      output_file='bnntocnf.cnf'
      write_output(cnf_array, len(s), output_file)
+     print('################################################### End of the Encoding Process !!!  ###########################################################################')
+
 
      
 

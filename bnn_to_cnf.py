@@ -43,25 +43,25 @@ def sequential_counter(l, D, SQ_id):
   return (r[m-1][D], cnf_clauses)
 
 def internal_layer_to_cnf(x, a,bias, layer_id):
-  print('x length:', len(x))
-  print('SHAPE :', a.shape)
-  print(type(a))
-  print(a)
-  print('Type of a:', type(a))
-  print('Content of a[0]:', a[0])
-  print('Length of a[0]:', len(a[0]))
+  #print('x length:', len(x))
+  #print('SHAPE :', a.shape)
+  #print(type(a))
+  #print(a)
+  #print('Type of a:', type(a))
+  #print('Content of a[0]:', a[0])
+  #print('Length of a[0]:', len(a[0]))
 
 
 
   #print('x :',x)
-  print('Content of layer.get_weights()[0]  :',a)
+  #print('Content of layer.get_weights()[0]  :',a)
   si = len(x)
   so = len(a)
   print('si :', si)
   print('so :',so)
   # a= layer.get_weights()[0]
   assert len(a.shape) == 2, 'weights matrix should be 2D'
-  print('LENGTH :', a[0])
+  #print('LENGTH :', a[0])
   assert( si == len(a[0]) ), 'input lengths do not match!'
   assert( so == len(bias) ), 'output lengths do not match!'
 
@@ -98,11 +98,19 @@ def internal_layer_to_cnf(x, a,bias, layer_id):
   
   return (output_terms, cnf_clauses)
 
-def output_layer_to_cnf(x, a, thresh, comp, layer_id):
+
+def output_layer_to_cnf(x, a, bias,  layer_id):
   si = len(x)
-  so = len(a)
+  so = len(a[0])
+  print('si :', si)
+  print('so :',so)
+  #print('Weights Softmax layer : ', a)
+  #print('SHAPE :', a.shape)
+  #print('a[0] and si  :', a[0], si)
+  #print('len(bias) and so  :', len(bias), so)
+
   assert( si == len(a[0]) ), 'input lengths do not match!'
-  assert( so == len(thresh) ), 'output lengths do not match!'
+  assert( so == len(bias) ), 'output lengths do not match!'
 
   d = [[] for _ in range(so)]
   output_terms = []
@@ -125,7 +133,7 @@ def output_layer_to_cnf(x, a, thresh, comp, layer_id):
           l.append(x[k].neg())
           sum_a_neg -= 1
 
-      bi, bj = -1*thresh[i], -1*thresh[j]
+      bi, bj = -1*bias[i], -1*bias[j]
       E = math.ceil( (bj - bi + sum_a_i - sum_a_j) / 2.0 )
       D = (int)(math.ceil(E/2.0)) + abs(sum_a_neg)
       (final_term, clauses) = sequential_counter(l, D, '%s:S%d-%d' % (layer_id, i, j))
